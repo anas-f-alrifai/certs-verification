@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Verification</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #0d1117; /* Dark background color */
+            color: #ffffff; /* Text color */
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .btn-primary{
+            background-color: #6510F0;
+            border: transparent;
+        }
+        .navbar-brand{
+            color: #6510F0;
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Qbit Technologies</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+        </li>
+      </ul>
+      <form class="d-flex" role="search">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="mb-4">Verify Certificates</h2>
+            <form id="verificationForm" onsubmit="return validateForm()">
+                <div class="form-group">
+                    <label for="verificationCode">Enter Verification Code:</label>
+                    <input type="text" class="form-control" id="verificationCode" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Verify Certificate</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Popup -->
+<!-- Modal Popup -->
+<div class="modal fade" id="verificationModal" tabindex="-1" role="dialog" aria-labelledby="verificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="verificationModalLabel">Verification Result</h5>
+                <button type="button" class="close text-light" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="verificationResult"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JavaScript -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function validateForm() {
+        var verificationCode = document.getElementById("verificationCode").value;
+        var codeRegex = /^QUB-(2[3-9]|3[0-9])(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])\d{3}$/;
+
+        if (!codeRegex.test(verificationCode)) {
+            alert("Invalid verification code format. It must be in the format QUB-YYMMDDXXX.");
+            return false;
+        }
+
+        // Continue with the verification logic if the code format is valid
+        verifyCertificate();
+        return false; // Prevent form submission, as verification is handled asynchronously
+    }
+
+    function verifyCertificate() {
+        // Get the verification code
+        var verificationCode = document.getElementById("verificationCode").value;
+
+        // Make an asynchronous request to your PHP API
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "verify.php?id=" + verificationCode, true);
+
+        // Set up the callback function to handle the response
+        xhr.onload = function () {
+            if (xhr.status == 200) {
+                // Parse the JSON response
+                var response = JSON.parse(xhr.responseText);
+
+                // Display the verification result in the modal
+                displayVerificationResult(response);
+            } else {
+                // Handle errors from the server
+                alert("Error: Unable to verify the certificate. Please try again later.");
+            }
+        };
+
+        // Send the request
+        xhr.send();
+    }
+
+    function displayVerificationResult(response) {
+        var modalBody = document.getElementById("verificationResult");
+
+        // Clear previous content
+        modalBody.innerHTML = "";
+
+        if (response.success) {
+            modalBody.innerHTML = "<p>Certificate " + response.certificate.id + " is valid for " + response.certificate.name + "<br>issued on " + response.certificate.date + ".</p>";
+        } else {
+            modalBody.innerHTML = "<p>Error: " + response.error + "</p>";
+        }
+
+        // Show the modal
+        $('#verificationModal').modal('show');
+    }
+</script>
+
+</body>
+</html>
